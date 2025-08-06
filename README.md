@@ -1,2 +1,2 @@
-1/. run pnpm install
+1/. pnpm install
 2/. run file runN8N.bat
