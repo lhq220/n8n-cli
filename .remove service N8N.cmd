@@ -1,0 +1,1 @@
+nssm remove .n8n

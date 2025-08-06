@@ -1,0 +1,1 @@
+nssm install .n8n "%CD%\runN8N.bat"
