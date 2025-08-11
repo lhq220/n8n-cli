@@ -260,7 +260,7 @@ let License = class License {
         return true;
     }
     isAPIDisabled() {
-        return true;
+        return false;
     }
     isWorkerViewLicensed() {
         return true;
