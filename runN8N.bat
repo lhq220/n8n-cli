@@ -1,4 +1,4 @@
-::set N8N_USER_FOLDER=G:\
+set "N8N_USER_FOLDER=D:\n8n"
 set NODE_ENV=production
 set N8N_BASIC_AUTH_ACTIVE=true
 set N8N_BASIC_AUTH_USER=admin
@@ -34,9 +34,9 @@ set GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
 set N8N_EMAIL_MODE=smtp
 set N8N_SMTP_HOST=smtp.gmail.com
 set N8N_SMTP_PORT=587
-set N8N_SMTP_USER=dwscntt@gmail.com
+set N8N_SMTP_USER=
 set "N8N_SMTP_PASS="
-set "N8N_SMTP_SENDER="
+set "N8N_SMTP_SENDER=DOWASEN CNTT"
 set N8N_SMTP_SSL=false
 
 cd D:\n8n\bin
