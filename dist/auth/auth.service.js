@@ -108,7 +108,7 @@ let AuthService = class AuthService {
     issueCookie(res, user, usedMfa, browserId) {
         const isWithinUsersLimit = this.license.isWithinUsersLimit();
         if (config_2.default.getEnv('userManagement.isInstanceOwnerSetUp') &&
-            user.role !== 'global:owner' &&
+            user.role.slug !== db_1.GLOBAL_OWNER_ROLE.slug &&
             !isWithinUsersLimit) {
             throw new forbidden_error_1.ForbiddenError(constants_2.RESPONSE_ERROR_MESSAGES.USERS_QUOTA_REACHED);
         }
@@ -138,6 +138,7 @@ let AuthService = class AuthService {
         });
         const user = await this.userRepository.findOne({
             where: { id: jwtPayload.id },
+            relations: ['role'],
         });
         if (!user ||
             user.disabled ||
@@ -186,7 +187,7 @@ let AuthService = class AuthService {
         }
         const user = await this.userRepository.findOne({
             where: { id: decodedToken.sub },
-            relations: ['authIdentities'],
+            relations: ['authIdentities', 'role'],
         });
         if (!user) {
             this.logger.debug('Request to resolve password token failed because no user was found for the provided user ID', { userId: decodedToken.sub, token });
@@ -209,7 +210,7 @@ let AuthService = class AuthService {
         return (0, crypto_1.createHash)('sha256').update(input).digest('base64');
     }
     get jwtRefreshTimeout() {
-        const { jwtRefreshTimeoutHours, jwtSessionDurationHours } = config_2.default.get('userManagement');
+        const { jwtRefreshTimeoutHours, jwtSessionDurationHours } = this.globalConfig.userManagement;
         if (jwtRefreshTimeoutHours === 0) {
             return Math.floor(jwtSessionDurationHours * 0.25 * constants_1.Time.hours.toMilliseconds);
         }
@@ -218,7 +219,7 @@ let AuthService = class AuthService {
         }
     }
     get jwtExpiration() {
-        return config_2.default.get('userManagement.jwtSessionDurationHours') * constants_1.Time.hours.toSeconds;
+        return this.globalConfig.userManagement.jwtSessionDurationHours * constants_1.Time.hours.toSeconds;
     }
 };
 exports.AuthService = AuthService;

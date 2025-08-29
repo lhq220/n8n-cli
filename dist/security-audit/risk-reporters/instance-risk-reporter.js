@@ -20,10 +20,10 @@ const di_1 = require("@n8n/di");
 const axios_1 = __importDefault(require("axios"));
 const n8n_core_1 = require("n8n-core");
 const constants_1 = require("../../constants");
+const community_packages_config_1 = require("../../modules/community-packages/community-packages.config");
 const public_api_1 = require("../../public-api");
 const constants_2 = require("../../security-audit/constants");
 const utils_1 = require("../../security-audit/utils");
-const community_packages_config_1 = require("../../community-packages/community-packages.config");
 let InstanceRiskReporter = class InstanceRiskReporter {
     constructor(instanceSettings, logger, globalConfig) {
         this.instanceSettings = instanceSettings;

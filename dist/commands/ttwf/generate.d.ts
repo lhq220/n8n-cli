@@ -7,14 +7,14 @@ declare const flagsSchema: z.ZodObject<{
     limit: z.ZodDefault<z.ZodNumber>;
     concurrency: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    concurrency: number;
     limit: number;
+    concurrency: number;
     output: string;
     input?: string | undefined;
     prompt?: string | undefined;
 }, {
-    concurrency?: number | undefined;
     limit?: number | undefined;
+    concurrency?: number | undefined;
     input?: string | undefined;
     output?: string | undefined;
     prompt?: string | undefined;

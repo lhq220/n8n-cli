@@ -163,7 +163,9 @@ let ImportWorkflowsCommand = class ImportWorkflowsCommand extends base_command_1
             return await di_1.Container.get(db_1.ProjectRepository).findOneByOrFail({ id: projectId });
         }
         if (!userId) {
-            const owner = await di_1.Container.get(db_1.UserRepository).findOneBy({ role: 'global:owner' });
+            const owner = await di_1.Container.get(db_1.UserRepository).findOneBy({
+                role: { slug: db_1.GLOBAL_OWNER_ROLE.slug },
+            });
             if (!owner) {
                 throw new n8n_workflow_1.UserError(`Failed to find owner. ${constants_1.UM_FIX_INSTRUCTION}`);
             }

@@ -1,8 +1,9 @@
+import { GlobalConfig } from '@n8n/config';
 import jwt from 'jsonwebtoken';
 import { InstanceSettings } from 'n8n-core';
 export declare class JwtService {
-    readonly jwtSecret: string;
-    constructor({ encryptionKey }: InstanceSettings);
+    jwtSecret: string;
+    constructor({ encryptionKey }: InstanceSettings, globalConfig: GlobalConfig);
     sign(payload: object, options?: jwt.SignOptions): string;
     decode(token: string): JwtPayload;
     verify<T = JwtPayload>(token: string, options?: jwt.VerifyOptions): T;

@@ -41,9 +41,6 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScalingService = void 0;
 const backend_common_1 = require("@n8n/backend-common");
@@ -56,7 +53,6 @@ const n8n_core_1 = require("n8n-core");
 const n8n_workflow_1 = require("n8n-workflow");
 const node_assert_1 = __importStar(require("node:assert"));
 const active_executions_1 = require("../active-executions");
-const config_2 = __importDefault(require("../config"));
 const constants_2 = require("../constants");
 const event_service_1 = require("../events/event.service");
 const utils_1 = require("../utils");
@@ -74,8 +70,8 @@ let ScalingService = class ScalingService {
         this.eventService = eventService;
         this.jobCounters = { completed: 0, failed: 0 };
         this.queueRecoveryContext = {
-            batchSize: config_2.default.getEnv('executions.queueRecovery.batchSize'),
-            waitMs: config_2.default.getEnv('executions.queueRecovery.interval') * 60 * 1000,
+            batchSize: this.globalConfig.executions.queueRecovery.batchSize,
+            waitMs: this.globalConfig.executions.queueRecovery.interval * 60 * 1000,
         };
         this.logger = this.logger.scoped('scaling');
     }
@@ -94,7 +90,7 @@ let ScalingService = class ScalingService {
         });
         this.registerListeners();
         if (this.instanceSettings.isLeader)
-            this.scheduleQueueRecovery();
+            this.scheduleQueueRecovery(0);
         this.scheduleQueueMetrics();
         this.logger.debug('Queue setup completed');
     }
@@ -332,8 +328,7 @@ let ScalingService = class ScalingService {
     }
     get isQueueMetricsEnabled() {
         return (this.globalConfig.endpoints.metrics.includeQueueMetrics &&
-            this.instanceSettings.instanceType === 'main' &&
-            this.instanceSettings.isSingleMain);
+            this.instanceSettings.instanceType === 'main');
     }
     scheduleQueueMetrics() {
         if (!this.isQueueMetricsEnabled || this.queueMetricsInterval)
@@ -369,6 +364,8 @@ let ScalingService = class ScalingService {
                 this.scheduleQueueRecovery();
             }
         }, waitMs);
+        if (waitMs === 0)
+            return;
         const wait = [this.queueRecoveryContext.waitMs / constants_1.Time.minutes.toMilliseconds, 'min'].join(' ');
         this.logger.debug(`Scheduled queue recovery check for next ${wait}`);
     }

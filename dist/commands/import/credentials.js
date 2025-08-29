@@ -181,7 +181,11 @@ let ImportCredentialsCommand = class ImportCredentialsCommand extends base_comma
             return await this.transactionManager.findOneByOrFail(db_1.Project, { id: projectId });
         }
         if (!userId) {
-            const owner = await this.transactionManager.findOneBy(db_1.User, { role: 'global:owner' });
+            const owner = await this.transactionManager.findOneBy(db_1.User, {
+                role: {
+                    slug: db_1.GLOBAL_OWNER_ROLE.slug,
+                },
+            });
             if (!owner) {
                 throw new n8n_workflow_1.UserError(`Failed to find owner. ${constants_1.UM_FIX_INSTRUCTION}`);
             }

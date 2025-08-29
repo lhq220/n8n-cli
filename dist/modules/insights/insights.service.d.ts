@@ -35,8 +35,8 @@ export declare class InsightsService {
     }): Promise<{
         count: number;
         data: {
-            workflowId: string;
-            projectId: string;
+            workflowId: string | null;
+            projectId: string | null;
             workflowName: string;
             projectName: string;
             failed: number;

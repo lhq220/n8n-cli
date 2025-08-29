@@ -107,7 +107,6 @@ require("./workflows/workflows.controller");
 require("./webhooks/webhooks.controller");
 const chat_server_1 = require("./chat/chat-server");
 const mfa_service_1 = require("./mfa/mfa.service");
-const community_packages_config_1 = require("./community-packages/community-packages.config");
 let Server = class Server extends abstract_server_1.AbstractServer {
     constructor(loadNodesAndCredentials, postHogClient, eventService, instanceSettings) {
         super();
@@ -122,6 +121,7 @@ let Server = class Server extends abstract_server_1.AbstractServer {
         if (!this.globalConfig.endpoints.disableUi) {
             const { FrontendService } = await Promise.resolve().then(() => __importStar(require('./services/frontend.service')));
             this.frontendService = di_1.Container.get(FrontendService);
+            await Promise.resolve().then(() => __importStar(require('./controllers/module-settings.controller')));
         }
         this.presetCredentialsLoaded = false;
         this.endpointPresetCredentials = this.globalConfig.credentials.overwrite.endpoint;
@@ -140,10 +140,6 @@ let Server = class Server extends abstract_server_1.AbstractServer {
             const { LdapService } = await Promise.resolve().then(() => __importStar(require('./ldap.ee/ldap.service.ee')));
             await Promise.resolve().then(() => __importStar(require('./ldap.ee/ldap.controller.ee')));
             await di_1.Container.get(LdapService).init();
-        }
-        if (di_1.Container.get(community_packages_config_1.CommunityPackagesConfig).enabled) {
-            await Promise.resolve().then(() => __importStar(require('./community-packages/community-packages.controller')));
-            await Promise.resolve().then(() => __importStar(require('./community-packages/community-node-types.controller')));
         }
         if (constants_1.inE2ETests) {
             await Promise.resolve().then(() => __importStar(require('./controllers/e2e.controller')));
@@ -237,7 +233,6 @@ let Server = class Server extends abstract_server_1.AbstractServer {
         this.app.get(`/${this.restEndpoint}/options/timezones`, (_, res) => res.sendFile(tzDataFile, { dotfiles: 'allow' }));
         if (frontendService) {
             this.app.get(`/${this.restEndpoint}/settings`, ResponseHelper.send(async () => frontendService.getSettings()));
-            this.app.get(`/${this.restEndpoint}/module-settings`, ResponseHelper.send(async () => frontendService.getModuleSettings()));
             this.app.get(`/${this.restEndpoint}/config.js`, (_req, res) => {
                 const frontendSentryConfig = JSON.stringify({
                     dsn: this.globalConfig.sentry.frontendDsn,

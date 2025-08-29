@@ -13,22 +13,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JwtService = void 0;
+const config_1 = require("@n8n/config");
 const di_1 = require("@n8n/di");
 const crypto_1 = require("crypto");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const n8n_core_1 = require("n8n-core");
-const config_1 = __importDefault(require("../config"));
 let JwtService = class JwtService {
-    constructor({ encryptionKey }) {
-        this.jwtSecret = config_1.default.getEnv('userManagement.jwtSecret');
-        this.jwtSecret = config_1.default.getEnv('userManagement.jwtSecret');
+    constructor({ encryptionKey }, globalConfig) {
+        this.jwtSecret = '';
+        this.jwtSecret = globalConfig.userManagement.jwtSecret;
         if (!this.jwtSecret) {
             let baseKey = '';
             for (let i = 0; i < encryptionKey.length; i += 2) {
                 baseKey += encryptionKey[i];
             }
             this.jwtSecret = (0, crypto_1.createHash)('sha256').update(baseKey).digest('hex');
-            config_1.default.set('userManagement.jwtSecret', this.jwtSecret);
+            di_1.Container.get(config_1.GlobalConfig).userManagement.jwtSecret = this.jwtSecret;
         }
     }
     sign(payload, options = {}) {
@@ -44,6 +44,6 @@ let JwtService = class JwtService {
 exports.JwtService = JwtService;
 exports.JwtService = JwtService = __decorate([
     (0, di_1.Service)(),
-    __metadata("design:paramtypes", [n8n_core_1.InstanceSettings])
+    __metadata("design:paramtypes", [n8n_core_1.InstanceSettings, config_1.GlobalConfig])
 ], JwtService);
 //# sourceMappingURL=jwt.service.js.map

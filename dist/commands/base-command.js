@@ -56,11 +56,11 @@ const telemetry_event_relay_1 = require("../events/relays/telemetry.event-relay"
 const external_hooks_1 = require("../external-hooks");
 const license_1 = require("../license");
 const load_nodes_and_credentials_1 = require("../load-nodes-and-credentials");
+const community_packages_config_1 = require("../modules/community-packages/community-packages.config");
 const node_types_1 = require("../node-types");
 const posthog_1 = require("../posthog");
 const shutdown_service_1 = require("../shutdown/shutdown.service");
 const workflow_history_manager_ee_1 = require("../workflows/workflow-history.ee/workflow-history-manager.ee");
-const community_packages_config_1 = require("../community-packages/community-packages.config");
 class BaseCommand {
     constructor() {
         this.logger = di_1.Container.get(backend_common_1.Logger);
@@ -84,6 +84,7 @@ class BaseCommand {
             release: `n8n@${constants_2.N8N_VERSION}`,
             serverName: deploymentName,
             releaseDate: constants_2.N8N_RELEASE_DATE,
+            withEventLoopBlockDetection: true,
         });
         process.once('SIGTERM', this.onTerminationSignal('SIGTERM'));
         process.once('SIGINT', this.onTerminationSignal('SIGINT'));
@@ -108,7 +109,7 @@ class BaseCommand {
         }
         const communityPackagesConfig = di_1.Container.get(community_packages_config_1.CommunityPackagesConfig);
         if (communityPackagesConfig.enabled && this.needsCommunityPackages) {
-            const { CommunityPackagesService } = await Promise.resolve().then(() => __importStar(require('../community-packages/community-packages.service')));
+            const { CommunityPackagesService } = await Promise.resolve().then(() => __importStar(require('../modules/community-packages/community-packages.service')));
             await di_1.Container.get(CommunityPackagesService).init();
         }
         const taskRunnersConfig = this.globalConfig.taskRunners;

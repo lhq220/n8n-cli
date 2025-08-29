@@ -41,6 +41,9 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WaitingWebhooks = void 0;
 const backend_common_1 = require("@n8n/backend-common");
@@ -54,6 +57,8 @@ const WebhookHelpers = __importStar(require("../webhooks/webhook-helpers"));
 const WorkflowExecuteAdditionalData = __importStar(require("../workflow-execute-additional-data"));
 const webhook_request_sanitizer_1 = require("./webhook-request-sanitizer");
 const webhook_service_1 = require("./webhook.service");
+const n8n_core_1 = require("n8n-core");
+const crypto_1 = __importDefault(require("crypto"));
 let WaitingWebhooks = class WaitingWebhooks {
     constructor(logger, nodeTypes, executionRepository, webhookService) {
         this.logger = logger;
@@ -90,12 +95,40 @@ let WaitingWebhooks = class WaitingWebhooks {
             unflattenData: true,
         });
     }
+    getHmacSecret() {
+        return di_1.Container.get(n8n_core_1.InstanceSettings).hmacSignatureSecret;
+    }
+    validateSignatureInRequest(req, secret) {
+        try {
+            const actualToken = req.query[n8n_core_1.WAITING_TOKEN_QUERY_PARAM];
+            if (typeof actualToken !== 'string')
+                return false;
+            const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+            parsedUrl.searchParams.delete(n8n_core_1.WAITING_TOKEN_QUERY_PARAM);
+            const urlForSigning = (0, n8n_core_1.prepareUrlForSigning)(parsedUrl);
+            const expectedToken = (0, n8n_core_1.generateUrlSignature)(urlForSigning, secret);
+            const valid = crypto_1.default.timingSafeEqual(Buffer.from(actualToken), Buffer.from(expectedToken));
+            return valid;
+        }
+        catch (error) {
+            return false;
+        }
+    }
     async executeWebhook(req, res) {
         const { path: executionId, suffix } = req.params;
         this.logReceivedWebhook(req.method, executionId);
         (0, webhook_request_sanitizer_1.sanitizeWebhookRequest)(req);
         req.params = {};
         const execution = await this.getExecution(executionId);
+        if (execution && execution.data.validateSignature) {
+            const lastNodeExecuted = execution.data.resultData.lastNodeExecuted;
+            const lastNode = execution.workflowData.nodes.find((node) => node.name === lastNodeExecuted);
+            const shouldValidate = lastNode?.parameters.operation === n8n_workflow_1.SEND_AND_WAIT_OPERATION;
+            if (shouldValidate && !this.validateSignatureInRequest(req, this.getHmacSecret())) {
+                res.status(401).json({ error: 'Invalid token' });
+                return { noWebhookResponse: true };
+            }
+        }
         if (!execution) {
             throw new not_found_error_1.NotFoundError(`The execution "${executionId}" does not exist.`);
         }

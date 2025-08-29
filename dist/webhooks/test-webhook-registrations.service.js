@@ -52,6 +52,9 @@ let TestWebhookRegistrationsService = class TestWebhookRegistrationsService {
             return [];
         return Object.values(hash);
     }
+    async getRegistrationsHash() {
+        return await this.cacheService.getHash(this.cacheKey);
+    }
     async deregisterAll() {
         await this.cacheService.delete(this.cacheKey);
     }

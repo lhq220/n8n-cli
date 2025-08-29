@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import { AuthService } from '../../../auth/auth.service';
 import { UrlService } from '../../../services/url.service';
 import { OidcService } from '../oidc.service.ee';
+import { AuthlessRequest } from '../../../requests';
 export declare class OidcController {
     private readonly oidcService;
     private readonly authService;
@@ -14,5 +15,5 @@ export declare class OidcController {
     }>;
     saveConfiguration(_req: AuthenticatedRequest, _res: Response, payload: OidcConfigDto): Promise<OidcConfigDto>;
     redirectToAuthProvider(_req: Request, res: Response): Promise<void>;
-    callbackHandler(req: Request, res: Response): Promise<void>;
+    callbackHandler(req: AuthlessRequest, res: Response): Promise<void>;
 }

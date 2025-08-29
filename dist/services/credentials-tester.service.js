@@ -54,6 +54,7 @@ const n8n_core_1 = require("n8n-core");
 const n8n_workflow_1 = require("n8n-workflow");
 const credential_types_1 = require("../credential-types");
 const node_types_1 = require("../node-types");
+const utils_1 = require("../utils");
 const WorkflowExecuteAdditionalData = __importStar(require("../workflow-execute-additional-data"));
 const constants_1 = require("../constants");
 const credentials_helper_1 = require("../credentials-helper");
@@ -108,7 +109,7 @@ let CredentialsTester = CredentialsTester_1 = class CredentialsTester {
             const node = this.nodeTypes.getByName(nodeName);
             const allNodeTypes = [];
             if (node instanceof n8n_workflow_1.VersionedNodeType) {
-                allNodeTypes.push(...Object.values(node.nodeVersions));
+                allNodeTypes.push.apply(allNodeTypes, Object.values(node.nodeVersions));
             }
             else {
                 allNodeTypes.push(node);
@@ -154,6 +155,18 @@ let CredentialsTester = CredentialsTester_1 = class CredentialsTester {
         }
         return undefined;
     }
+    redactSecrets(message, credentialsData, secretPaths) {
+        if (secretPaths.length === 0) {
+            return message;
+        }
+        const updatedSecrets = secretPaths
+            .map((path) => (0, get_1.default)(credentialsData, path))
+            .filter((value) => value !== undefined);
+        updatedSecrets.forEach((value) => {
+            message = message.replaceAll(value.toString(), `*****${value.toString().slice(-3)}`);
+        });
+        return message;
+    }
     async testCredentials(userId, credentialType, credentialsDecrypted) {
         const credentialTestFunction = this.getCredentialTestFunction(credentialType);
         if (credentialTestFunction === undefined) {
@@ -162,9 +175,11 @@ let CredentialsTester = CredentialsTester_1 = class CredentialsTester {
                 message: 'No testing function found for this credential.',
             };
         }
+        let credentialsDataSecretKeys = [];
         if (credentialsDecrypted.data) {
             try {
                 const additionalData = await WorkflowExecuteAdditionalData.getBase(userId);
+                credentialsDataSecretKeys = (0, utils_1.getAllKeyPaths)(credentialsDecrypted.data, '', [], (value) => value.includes('$secrets.'));
                 credentialsDecrypted.data = await this.credentialsHelper.applyDefaultsAndOverwrites(additionalData, credentialsDecrypted.data, credentialsDecrypted, credentialType, 'internal', undefined, undefined);
             }
             catch (error) {
@@ -177,7 +192,15 @@ let CredentialsTester = CredentialsTester_1 = class CredentialsTester {
         }
         if (typeof credentialTestFunction === 'function') {
             const context = new n8n_core_1.CredentialTestContext();
-            return credentialTestFunction.call(context, credentialsDecrypted);
+            const functionResult = credentialTestFunction.call(context, credentialsDecrypted);
+            if (functionResult instanceof Promise) {
+                const result = await functionResult;
+                if (typeof result?.message === 'string') {
+                    result.message = this.redactSecrets(result.message, credentialsDecrypted.data, credentialsDataSecretKeys);
+                }
+                return result;
+            }
+            return functionResult;
         }
         let nodeType;
         if (credentialTestFunction.nodeType) {

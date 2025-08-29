@@ -17,6 +17,8 @@ export declare class WaitingWebhooks implements IWebhookManager {
     private isSendAndWaitRequest;
     private createWorkflow;
     protected getExecution(executionId: string): Promise<IExecutionResponse | undefined>;
+    private getHmacSecret;
+    private validateSignatureInRequest;
     executeWebhook(req: WaitingWebhookRequest, res: express.Response): Promise<IWebhookResponseCallbackData>;
     protected getWebhookExecutionData({ execution, req, res, lastNodeExecuted, executionId, suffix, }: {
         execution: IExecutionResponse;

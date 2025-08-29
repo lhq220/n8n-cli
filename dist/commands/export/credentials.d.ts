@@ -9,17 +9,17 @@ declare const flagsSchema: z.ZodObject<{
     separate: z.ZodOptional<z.ZodBoolean>;
     decrypted: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    all?: boolean | undefined;
     id?: string | undefined;
     output?: string | undefined;
+    all?: boolean | undefined;
     backup?: boolean | undefined;
     pretty?: boolean | undefined;
     separate?: boolean | undefined;
     decrypted?: boolean | undefined;
 }, {
-    all?: boolean | undefined;
     id?: string | undefined;
     output?: string | undefined;
+    all?: boolean | undefined;
     backup?: boolean | undefined;
     pretty?: boolean | undefined;
     separate?: boolean | undefined;

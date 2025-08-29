@@ -28,7 +28,7 @@ async function restoreBinaryDataId(run, executionId, workflowExecutionMode) {
     catch (e) {
         const error = e instanceof Error ? e : new Error(`${e}`);
         const logger = di_1.Container.get(backend_common_1.Logger);
-        if (error.message.includes('ENOENT')) {
+        if (typeof error.message === 'string' && error.message.includes('ENOENT')) {
             logger.warn('Failed to restore binary data ID - No such file or dir', {
                 executionId,
                 error,

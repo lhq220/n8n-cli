@@ -249,7 +249,12 @@ async function getBase(userId, currentNodeParameters, executionTimeoutTimestamp)
     const globalConfig = di_1.Container.get(config_1.GlobalConfig);
     const variables = await WorkflowHelpers.getVariables();
     const eventService = di_1.Container.get(event_service_1.EventService);
-    return {
+    const moduleRegistry = di_1.Container.get(backend_common_1.ModuleRegistry);
+    const dataStoreProxyProvider = moduleRegistry.isActive('data-table')
+        ? di_1.Container.get((await Promise.resolve().then(() => __importStar(require('./modules/data-table/data-store-proxy.service')))).DataStoreProxyService)
+        : undefined;
+    const additionalData = {
+        dataStoreProxyProvider,
         currentNodeExecutionIndex: 0,
         credentialsHelper: di_1.Container.get(credentials_helper_1.CredentialsHelper),
         executeWorkflow,
@@ -278,5 +283,9 @@ async function getBase(userId, currentNodeParameters, executionTimeoutTimestamp)
         },
         logAiEvent: (eventName, payload) => eventService.emit(eventName, payload),
     };
+    for (const [moduleName, moduleContext] of di_1.Container.get(backend_common_1.ModuleRegistry).context.entries()) {
+        additionalData[moduleName] = moduleContext;
+    }
+    return additionalData;
 }
 //# sourceMappingURL=workflow-execute-additional-data.js.map

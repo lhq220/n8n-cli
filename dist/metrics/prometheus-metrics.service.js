@@ -16,6 +16,7 @@ exports.PrometheusMetricsService = void 0;
 const config_1 = require("@n8n/config");
 const constants_1 = require("@n8n/constants");
 const db_1 = require("@n8n/db");
+const decorators_1 = require("@n8n/decorators");
 const di_1 = require("@n8n/di");
 const express_prom_bundle_1 = __importDefault(require("express-prom-bundle"));
 const luxon_1 = require("luxon");
@@ -61,6 +62,8 @@ let PrometheusMetricsService = class PrometheusMetricsService {
         prom_client_1.default.register.clear();
         this.initDefaultMetrics();
         this.initN8nVersionMetric();
+        if (this.instanceSettings.instanceType === 'main')
+            this.initInstanceRoleMetric();
         this.initCacheMetrics();
         this.initEventBusMetrics();
         this.initRouteMetrics(app);
@@ -100,6 +103,19 @@ let PrometheusMetricsService = class PrometheusMetricsService {
         });
         const { version, major, minor, patch } = n8nVersion;
         versionGauge.set({ version: 'v' + version, major, minor, patch }, 1);
+    }
+    initInstanceRoleMetric() {
+        this.gauges.instanceRoleLeader = new prom_client_1.default.Gauge({
+            name: this.prefix + 'instance_role_leader',
+            help: 'Whether this main instance is the leader (1) or not (0).',
+        });
+        this.gauges.instanceRoleLeader.set(this.instanceSettings.isLeader ? 1 : 0);
+    }
+    updateOnLeaderTakeover() {
+        this.gauges.instanceRoleLeader?.set(1);
+    }
+    updateOnLeaderStepdown() {
+        this.gauges.instanceRoleLeader?.set(0);
     }
     initDefaultMetrics() {
         if (!this.includes.metrics.default)
@@ -283,6 +299,18 @@ let PrometheusMetricsService = class PrometheusMetricsService {
     }
 };
 exports.PrometheusMetricsService = PrometheusMetricsService;
+__decorate([
+    (0, decorators_1.OnLeaderTakeover)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PrometheusMetricsService.prototype, "updateOnLeaderTakeover", null);
+__decorate([
+    (0, decorators_1.OnLeaderStepdown)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PrometheusMetricsService.prototype, "updateOnLeaderStepdown", null);
 exports.PrometheusMetricsService = PrometheusMetricsService = __decorate([
     (0, di_1.Service)(),
     __metadata("design:paramtypes", [cache_service_1.CacheService,

@@ -1,6 +1,6 @@
 import type { ProjectIcon, ProjectType } from '@n8n/api-types';
 import type { APIRequest, AuthenticatedRequest, Variables, Project, User, ListQueryDb, WorkflowHistory } from '@n8n/db';
-import type { AssignableGlobalRole, GlobalRole, ProjectRole, Scope } from '@n8n/permissions';
+import type { AssignableGlobalRole, ProjectRole, Scope } from '@n8n/permissions';
 import type { ICredentialDataDecryptedObject, INodeCredentialTestRequest, IPersonalizationSurveyAnswersV4 } from 'n8n-workflow';
 export type AuthlessRequest<RouteParams = {}, ResponseBody = {}, RequestBody = {}, RequestQuery = {}> = APIRequest<RouteParams, ResponseBody, RequestBody, RequestQuery>;
 export declare namespace ListQuery {
@@ -215,7 +215,7 @@ export declare namespace ActiveWorkflowRequest {
 }
 export declare namespace ProjectRequest {
     type GetMyProjectsResponse = Array<Project & {
-        role: ProjectRole | GlobalRole;
+        role: string;
         scopes?: Scope[];
     }>;
     type ProjectRelationResponse = {

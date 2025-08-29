@@ -90,7 +90,7 @@ module.exports = {
                 ...(active !== undefined && { active }),
                 ...(name !== undefined && { name: (0, typeorm_1.Like)('%' + name.trim() + '%') }),
             };
-            if (['global:owner', 'global:admin'].includes(req.user.role)) {
+            if (['global:owner', 'global:admin'].includes(req.user.role.slug)) {
                 if (tags) {
                     const workflowIds = await di_1.Container.get(db_1.TagRepository).getWorkflowIdsViaTags((0, workflows_service_1.parseTagNames)(tags));
                     where.id = (0, typeorm_1.In)(workflowIds);
@@ -139,16 +139,21 @@ module.exports = {
                 'meta',
                 'versionId',
                 'triggerCount',
+                'shared',
             ];
             if (!excludePinnedData) {
                 selectFields.push('pinData');
+            }
+            const relations = ['shared'];
+            if (!di_1.Container.get(config_1.GlobalConfig).tags.disabled) {
+                relations.push('tags');
             }
             const [workflows, count] = await di_1.Container.get(db_1.WorkflowRepository).findAndCount({
                 skip: offset,
                 take: limit,
                 select: selectFields,
+                relations,
                 where,
-                ...(!di_1.Container.get(config_1.GlobalConfig).tags.disabled && { relations: ['tags'] }),
             });
             if (excludePinnedData) {
                 workflows.forEach((workflow) => {

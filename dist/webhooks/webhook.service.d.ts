@@ -21,7 +21,7 @@ export declare class WebhookService {
     createWebhook(data: Partial<WebhookEntity>): WebhookEntity;
     deleteWorkflowWebhooks(workflowId: string): Promise<WebhookEntity[]>;
     private deleteWebhooks;
-    getWebhookMethods(path: string): Promise<IHttpRequestMethods[]>;
+    getWebhookMethods(rawPath: string): Promise<IHttpRequestMethods[]>;
     private isDynamicPath;
     getNodeWebhooks(workflow: Workflow, node: INode, additionalData: IWorkflowExecuteAdditionalData, ignoreRestartWebhooks?: boolean): IWebhookData[];
     createWebhookIfNotExists(workflow: Workflow, webhookData: IWebhookData, mode: WorkflowExecuteMode, activation: WorkflowActivateMode): Promise<void>;

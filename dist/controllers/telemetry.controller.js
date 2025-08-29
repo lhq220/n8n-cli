@@ -40,7 +40,7 @@ let TelemetryController = class TelemetryController {
     async page(req, res, next) {
         await this.proxy(req, res, next);
     }
-    async sourceConfig() {
+    async sourceConfig(_, res) {
         const response = await fetch('https://api-rs.n8n.io/sourceConfig', {
             headers: {
                 authorization: 'Basic ' + btoa(`${this.globalConfig.diagnostics.frontendConfig.split(';')[0]}:`),
@@ -50,7 +50,7 @@ let TelemetryController = class TelemetryController {
             throw new Error(`Failed to fetch source config: ${response.statusText}`);
         }
         const config = await response.json();
-        return config;
+        res.json(config);
     }
 };
 exports.TelemetryController = TelemetryController;
@@ -73,9 +73,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TelemetryController.prototype, "page", null);
 __decorate([
-    (0, decorators_1.Get)('/rudderstack/sourceConfig', { skipAuth: true, rateLimit: { limit: 50, windowMs: 60_000 } }),
+    (0, decorators_1.Get)('/rudderstack/sourceConfig', {
+        skipAuth: true,
+        rateLimit: { limit: 50, windowMs: 60_000 },
+        usesTemplates: true,
+    }),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Request, Object]),
     __metadata("design:returntype", Promise)
 ], TelemetryController.prototype, "sourceConfig", null);
 exports.TelemetryController = TelemetryController = __decorate([

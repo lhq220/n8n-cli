@@ -34,9 +34,9 @@ const summaryParser = zod_1.z
     .array();
 const aggregatedInsightsByWorkflowParser = zod_1.z
     .object({
-    workflowId: zod_1.z.string(),
+    workflowId: zod_1.z.string().nullable(),
     workflowName: zod_1.z.string(),
-    projectId: zod_1.z.string(),
+    projectId: zod_1.z.string().nullable(),
     projectName: zod_1.z.string(),
     total: zod_1.z.union([zod_1.z.number(), zod_1.z.string()]).transform((value) => Number(value)),
     succeeded: zod_1.z.union([zod_1.z.number(), zod_1.z.string()]).transform((value) => Number(value)),

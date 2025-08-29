@@ -25,6 +25,9 @@ export declare class PrometheusMetricsService {
     enableLabels(labels: MetricLabel[]): void;
     disableAllLabels(): void;
     private initN8nVersionMetric;
+    private initInstanceRoleMetric;
+    updateOnLeaderTakeover(): void;
+    updateOnLeaderStepdown(): void;
     private initDefaultMetrics;
     private initRouteMetrics;
     private mountMetricsEndpoint;

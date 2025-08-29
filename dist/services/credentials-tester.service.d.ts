@@ -14,5 +14,6 @@ export declare class CredentialsTester {
     constructor(logger: Logger, errorReporter: ErrorReporter, credentialTypes: CredentialTypes, nodeTypes: NodeTypes, credentialsHelper: CredentialsHelper);
     private static hasAccessToken;
     getCredentialTestFunction(credentialType: string): ICredentialTestFunction | ICredentialTestRequestData | undefined;
+    private redactSecrets;
     testCredentials(userId: User['id'], credentialType: string, credentialsDecrypted: ICredentialsDecrypted): Promise<INodeCredentialTestResult>;
 }

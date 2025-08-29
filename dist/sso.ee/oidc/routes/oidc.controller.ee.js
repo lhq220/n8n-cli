@@ -45,7 +45,7 @@ let OidcController = class OidcController {
         const fullUrl = `${this.urlService.getInstanceBaseUrl()}${req.originalUrl}`;
         const callbackUrl = new URL(fullUrl);
         const user = await this.oidcService.loginUser(callbackUrl);
-        this.authService.issueCookie(res, user, false);
+        this.authService.issueCookie(res, user, true, req.browserId);
         res.redirect('/');
     }
 };

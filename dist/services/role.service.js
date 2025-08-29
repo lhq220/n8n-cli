@@ -40,7 +40,7 @@ let RoleService = class RoleService {
         return entity;
     }
     combineResourceScopes(type, user, shared, userProjectRelations) {
-        const globalScopes = (0, permissions_1.getRoleScopes)(user.role, [type]);
+        const globalScopes = (0, permissions_1.getAuthPrincipalScopes)(user, [type]);
         const scopesSet = new Set(globalScopes);
         for (const sharedEntity of shared) {
             const pr = userProjectRelations.find((p) => p.projectId === (sharedEntity.projectId ?? sharedEntity.project.id));

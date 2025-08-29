@@ -50,12 +50,13 @@ let UserService = class UserService {
         await this.userRepository.save(user);
     }
     async toPublic(user, options) {
-        const { password, updatedAt, authIdentities, mfaRecoveryCodes, mfaSecret, ...rest } = user;
+        const { password, updatedAt, authIdentities, mfaRecoveryCodes, mfaSecret, role, ...rest } = user;
         const providerType = authIdentities?.[0]?.providerType;
         let publicUser = {
             ...rest,
+            role: role?.slug,
             signInType: providerType ?? 'email',
-            isOwner: user.role === 'global:owner',
+            isOwner: user.role.slug === 'global:owner',
         };
         if (options?.withInviteUrl && !options?.inviterId) {
             throw new n8n_workflow_1.UnexpectedError('Inviter ID is required to generate invite URL');
@@ -158,7 +159,12 @@ let UserService = class UserService {
             : 'Creating 1 user shell...');
         try {
             await this.getManager().transaction(async (transactionManager) => await Promise.all(toCreateUsers.map(async ({ email, role }) => {
-                const { user: savedUser } = await this.userRepository.createUserWithProject({ email, role }, transactionManager);
+                const { user: savedUser } = await this.userRepository.createUserWithProject({
+                    email,
+                    role: {
+                        slug: role,
+                    },
+                }, transactionManager);
                 createdUsers.set(email, savedUser.id);
                 return savedUser;
             })));
@@ -173,9 +179,9 @@ let UserService = class UserService {
     }
     async changeUserRole(user, targetUser, newRole) {
         return await this.userRepository.manager.transaction(async (trx) => {
-            await trx.update(db_1.User, { id: targetUser.id }, { role: newRole.newRoleName });
-            const adminDowngradedToMember = user.role === 'global:owner' &&
-                targetUser.role === 'global:admin' &&
+            await trx.update(db_1.User, { id: targetUser.id }, { role: { slug: newRole.newRoleName } });
+            const adminDowngradedToMember = user.role.slug === 'global:owner' &&
+                targetUser.role.slug === 'global:admin' &&
                 newRole.newRoleName === 'global:member';
             if (adminDowngradedToMember) {
                 await this.publicApiKeyService.removeOwnerOnlyScopesFromApiKeys(targetUser, trx);

@@ -8,5 +8,5 @@ export declare class TelemetryController {
     track(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
     identify(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
     page(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
-    sourceConfig(): Promise<unknown>;
+    sourceConfig(_: Request, res: Response): Promise<void>;
 }

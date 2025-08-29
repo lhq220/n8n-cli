@@ -5,6 +5,7 @@ import type { IWebhookData, IWorkflowExecuteAdditionalData, IHttpRequestMethods,
 import { NodeTypes } from '../node-types';
 import { Push } from '../push';
 import { Publisher } from '../scaling/pubsub/publisher.service';
+import type { TestWebhookRegistration } from '../webhooks/test-webhook-registrations.service';
 import { TestWebhookRegistrationsService } from '../webhooks/test-webhook-registrations.service';
 import type { WorkflowRequest } from '../workflows/workflow.request';
 import { WebhookService } from './webhook.service';
@@ -25,6 +26,7 @@ export declare class TestWebhooks implements IWebhookManager {
         pushRef: string;
     }): Promise<void>;
     clearTimeout(key: string): void;
+    getWebhooksFromPath(rawPath: string): Promise<IWebhookData[]>;
     getWebhookMethods(rawPath: string): Promise<IHttpRequestMethods[]>;
     findAccessControlOptions(path: string, httpMethod: IHttpRequestMethods): Promise<WebhookAccessControlOptions | undefined>;
     needsWebhook(options: {
@@ -37,6 +39,7 @@ export declare class TestWebhooks implements IWebhookManager {
         triggerToStartFrom?: WorkflowRequest.ManualRunPayload['triggerToStartFrom'];
     }): Promise<boolean>;
     cancelWebhook(workflowId: string): Promise<boolean>;
+    getActiveWebhookFromRegistration(path: string, registration: TestWebhookRegistration): IWebhookData | undefined;
     getActiveWebhook(httpMethod: IHttpRequestMethods, path: string, webhookId?: string): Promise<IWebhookData | undefined>;
     deactivateWebhooks(workflow: Workflow): Promise<void>;
     toWorkflow(workflowEntity: IWorkflowBase): Workflow;

@@ -52,12 +52,11 @@ const path = __importStar(require("path"));
 const load_nodes_and_credentials_1 = require("../../load-nodes-and-credentials");
 const constants_1 = require("../../security-audit/constants");
 const utils_1 = require("../../security-audit/utils");
-const community_packages_service_1 = require("../../community-packages/community-packages.service");
-const community_packages_config_1 = require("../../community-packages/community-packages.config");
+const security_audit_repository_1 = require("../security-audit.repository");
 let NodesRiskReporter = class NodesRiskReporter {
-    constructor(loadNodesAndCredentials, communityPackagesService) {
+    constructor(loadNodesAndCredentials, packagesRepository) {
         this.loadNodesAndCredentials = loadNodesAndCredentials;
-        this.communityPackagesService = communityPackagesService;
+        this.packagesRepository = packagesRepository;
     }
     async report(workflows) {
         const officialRiskyNodes = (0, utils_1.getNodeTypes)(workflows, (node) => constants_1.OFFICIAL_RISKY_NODE_TYPES.has(node.type));
@@ -109,9 +108,7 @@ let NodesRiskReporter = class NodesRiskReporter {
         return report;
     }
     async getCommunityNodeDetails() {
-        if (!di_1.Container.get(community_packages_config_1.CommunityPackagesConfig).enabled)
-            return [];
-        const installedPackages = await this.communityPackagesService.getAllInstalledPackages();
+        const installedPackages = await this.packagesRepository.find({ relations: ['installedNodes'] });
         return installedPackages.reduce((acc, pkg) => {
             pkg.installedNodes.forEach((node) => acc.push({
                 kind: 'community',
@@ -141,6 +138,6 @@ exports.NodesRiskReporter = NodesRiskReporter;
 exports.NodesRiskReporter = NodesRiskReporter = __decorate([
     (0, di_1.Service)(),
     __metadata("design:paramtypes", [load_nodes_and_credentials_1.LoadNodesAndCredentials,
-        community_packages_service_1.CommunityPackagesService])
+        security_audit_repository_1.PackagesRepository])
 ], NodesRiskReporter);
 //# sourceMappingURL=nodes-risk-reporter.js.map

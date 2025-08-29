@@ -56,6 +56,12 @@ let TestRunnerService = TestRunnerService_1 = class TestRunnerService {
             throw new errors_ee_1.TestRunError('EVALUATION_TRIGGER_DISABLED');
         }
     }
+    hasModelNodeConnected(workflow, targetNodeName) {
+        return Object.keys(workflow.connections).some((sourceNodeName) => {
+            const connections = workflow.connections[sourceNodeName];
+            return connections?.[n8n_workflow_1.NodeConnectionTypes.AiLanguageModel]?.[0]?.some((connection) => connection.node === targetNodeName);
+        });
+    }
     validateSetMetricsNodes(workflow) {
         const metricsNodes = TestRunnerService_1.getEvaluationMetricsNodes(workflow);
         if (metricsNodes.length === 0) {
@@ -65,14 +71,18 @@ let TestRunnerService = TestRunnerService_1 = class TestRunnerService {
             if (node.disabled === true || !node.parameters) {
                 return true;
             }
-            if (node.typeVersion >= 4.7 && !node.parameters.metric) {
-                return true;
-            }
             const isCustomMetricsMode = node.typeVersion >= 4.7 ? node.parameters.metric === 'customMetrics' : true;
             if (isCustomMetricsMode) {
                 return (!node.parameters.metrics ||
                     node.parameters.metrics.assignments?.length === 0 ||
                     node.parameters.metrics.assignments?.some((assignment) => !assignment.name || assignment.value === null));
+            }
+            if (node.typeVersion >= 4.7) {
+                const metric = (node.parameters.metric ?? n8n_workflow_1.DEFAULT_EVALUATION_METRIC);
+                if ((0, n8n_workflow_1.metricRequiresModelConnection)(metric) &&
+                    !this.hasModelNodeConnected(workflow, node.name)) {
+                    return true;
+                }
             }
             return false;
         });

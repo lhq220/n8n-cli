@@ -48,8 +48,8 @@ export declare class InsightsByPeriodRepository extends Repository<InsightsByPer
     }): Promise<{
         count: number;
         rows: {
-            workflowId: string;
-            projectId: string;
+            workflowId: string | null;
+            projectId: string | null;
             workflowName: string;
             projectName: string;
             failed: number;

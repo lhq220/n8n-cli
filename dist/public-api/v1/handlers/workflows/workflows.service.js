@@ -37,7 +37,7 @@ async function getSharedWorkflowIds(user, scopes, projectId) {
 async function getSharedWorkflow(user, workflowId) {
     return await di_1.Container.get(db_1.SharedWorkflowRepository).findOne({
         where: {
-            ...(!['global:owner', 'global:admin'].includes(user.role) && { userId: user.id }),
+            ...(!['global:owner', 'global:admin'].includes(user.role.slug) && { userId: user.id }),
             ...(workflowId && { workflowId }),
         },
         relations: [

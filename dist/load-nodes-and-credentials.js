@@ -56,13 +56,13 @@ const n8n_workflow_1 = require("n8n-workflow");
 const path_1 = __importDefault(require("path"));
 const picocolors_1 = __importDefault(require("picocolors"));
 const constants_1 = require("./constants");
-const community_packages_config_1 = require("./community-packages/community-packages.config");
 let LoadNodesAndCredentials = class LoadNodesAndCredentials {
-    constructor(logger, errorReporter, instanceSettings, globalConfig) {
+    constructor(logger, errorReporter, instanceSettings, globalConfig, moduleRegistry) {
         this.logger = logger;
         this.errorReporter = errorReporter;
         this.instanceSettings = instanceSettings;
         this.globalConfig = globalConfig;
+        this.moduleRegistry = moduleRegistry;
         this.known = { nodes: {}, credentials: {} };
         this.loaded = { nodes: {}, credentials: {} };
         this.types = { nodes: [], credentials: [] };
@@ -89,8 +89,8 @@ let LoadNodesAndCredentials = class LoadNodesAndCredentials {
             await this.loadNodesFromNodeModules(nodeModulesDir, 'n8n-nodes-base');
             await this.loadNodesFromNodeModules(nodeModulesDir, '@n8n/n8n-nodes-langchain');
         }
-        if (!di_1.Container.get(community_packages_config_1.CommunityPackagesConfig).preventLoading) {
-            await this.loadNodesFromNodeModules(path_1.default.join(this.instanceSettings.nodesDownloadDir, 'node_modules'));
+        for (const dir of this.moduleRegistry.loadDirs) {
+            await this.loadNodesFromNodeModules(dir);
         }
         await this.loadNodesFromCustomDirectories();
         await this.postProcessLoaders();
@@ -153,6 +153,13 @@ let LoadNodesAndCredentials = class LoadNodesAndCredentials {
         const schemaPath = ['__schema__', `v${version}`, resource, operation].filter(Boolean).join('/');
         const filePath = path_1.default.resolve(nodeParentPath, schemaPath + '.json');
         return (0, backend_common_1.isContainedWithin)(nodeParentPath, filePath) ? filePath : undefined;
+    }
+    findLastCalloutIndex(properties) {
+        for (let i = properties.length - 1; i >= 0; i--) {
+            if (properties[i].type === 'callout')
+                return i;
+        }
+        return -1;
     }
     getCustomDirectories() {
         const customDirectories = [this.instanceSettings.customExtensionDir];
@@ -354,9 +361,10 @@ let LoadNodesAndCredentials = class LoadNodesAndCredentials {
                     typeOptions: { rows: 2 },
                     description: 'Explain to the LLM what this tool does, a good, specific description would allow LLMs to produce expected results much more often',
                 };
-                item.description.properties.unshift(descProp);
+                const lastCallout = this.findLastCalloutIndex(item.description.properties);
+                item.description.properties.splice(lastCallout + 1, 0, descProp);
                 if (hasResource || hasOperation) {
-                    item.description.properties.unshift(descriptionType);
+                    item.description.properties.splice(lastCallout + 1, 0, descriptionType);
                     descProp.displayOptions = {
                         show: {
                             descriptionType: ['manual'],
@@ -378,16 +386,16 @@ let LoadNodesAndCredentials = class LoadNodesAndCredentials {
     }
     async setupHotReload() {
         const { default: debounce } = await Promise.resolve().then(() => __importStar(require('lodash/debounce')));
-        const { watch } = await Promise.resolve().then(() => __importStar(require('chokidar')));
+        const { subscribe } = await Promise.resolve().then(() => __importStar(require('@parcel/watcher')));
         const { Push } = await Promise.resolve().then(() => __importStar(require('./push')));
         const push = di_1.Container.get(Push);
-        Object.values(this.loaders).forEach(async (loader) => {
+        for (const loader of Object.values(this.loaders)) {
             const { directory } = loader;
             try {
                 await promises_1.default.access(directory);
             }
             catch {
-                return;
+                continue;
             }
             const reloader = debounce(async () => {
                 this.logger.info(`Hot reload triggered for ${loader.packageName}`);
@@ -401,28 +409,35 @@ let LoadNodesAndCredentials = class LoadNodesAndCredentials {
                     this.logger.error(`Hot reload failed for ${loader.packageName}`);
                 }
             }, 100);
-            const watchPath = loader.isLazyLoaded ? path_1.default.join(directory, 'dist') : directory;
-            const watchOptions = {
-                ignoreInitial: true,
-                cwd: directory,
-                ignored: (filePath, stats) => {
-                    if (!stats)
-                        return false;
-                    if (stats.isDirectory())
-                        return false;
-                    if (filePath.includes('node_modules'))
-                        return true;
-                    if (loader.isLazyLoaded) {
-                        const basename = path_1.default.basename(filePath);
-                        return basename !== 'nodes.json' && basename !== 'credentials.json';
+            const watchPaths = loader.isLazyLoaded ? [path_1.default.join(directory, 'dist')] : [directory];
+            const customNodesRoot = path_1.default.join(directory, 'node_modules');
+            if (loader.packageName === 'CUSTOM') {
+                const customNodeEntries = await promises_1.default.readdir(customNodesRoot, {
+                    withFileTypes: true,
+                });
+                const realCustomNodesPaths = await Promise.all(customNodeEntries
+                    .filter((entry) => (entry.isDirectory() || entry.isSymbolicLink()) && !entry.name.startsWith('.'))
+                    .map(async (entry) => await promises_1.default.realpath(path_1.default.join(customNodesRoot, entry.name)).catch(() => null)));
+                watchPaths.push.apply(watchPaths, realCustomNodesPaths.filter((path) => !!path));
+            }
+            this.logger.debug('Watching node folders for hot reload', {
+                loader: loader.packageName,
+                paths: watchPaths,
+            });
+            for (const watchPath of watchPaths) {
+                const onFileEvent = async (_error, events) => {
+                    if (events.some((event) => event.type !== 'delete')) {
+                        const modules = Object.keys(require.cache).filter((module) => module.startsWith(watchPath));
+                        for (const module of modules) {
+                            delete require.cache[module];
+                        }
+                        await reloader();
                     }
-                    return !filePath.endsWith('.js') && !filePath.endsWith('.json');
-                },
-            };
-            const watcher = watch(watchPath, watchOptions);
-            watcher.on('change', reloader);
-            watcher.on('add', reloader);
-        });
+                };
+                const ignore = ['**/node_modules/**/node_modules/**'];
+                await subscribe(watchPath, onFileEvent, { ignore });
+            }
+        }
     }
 };
 exports.LoadNodesAndCredentials = LoadNodesAndCredentials;
@@ -431,6 +446,7 @@ exports.LoadNodesAndCredentials = LoadNodesAndCredentials = __decorate([
     __metadata("design:paramtypes", [backend_common_1.Logger,
         n8n_core_1.ErrorReporter,
         n8n_core_1.InstanceSettings,
-        config_1.GlobalConfig])
+        config_1.GlobalConfig,
+        backend_common_1.ModuleRegistry])
 ], LoadNodesAndCredentials);
 //# sourceMappingURL=load-nodes-and-credentials.js.map

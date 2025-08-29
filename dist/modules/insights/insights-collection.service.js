@@ -43,6 +43,8 @@ const shouldSkipMode = {
     internal: true,
     manual: true,
 };
+const MIN_RUNTIME = 0;
+const MAX_RUNTIME = 2 ** 31 - 1;
 let InsightsCollectionService = class InsightsCollectionService {
     constructor(sharedWorkflowRepository, insightsRawRepository, insightsMetadataRepository, insightsConfig, logger) {
         this.sharedWorkflowRepository = sharedWorkflowRepository;
@@ -97,7 +99,11 @@ let InsightsCollectionService = class InsightsCollectionService {
             value: 1,
         });
         if (ctx.runData.stoppedAt) {
-            const value = ctx.runData.stoppedAt.getTime() - ctx.runData.startedAt.getTime();
+            const runtimeMs = ctx.runData.stoppedAt.getTime() - ctx.runData.startedAt.getTime();
+            if (runtimeMs < MIN_RUNTIME || runtimeMs > MAX_RUNTIME) {
+                this.logger.warn(`Invalid runtime detected: ${runtimeMs}ms, clamping to safe range`);
+            }
+            const value = Math.min(Math.max(runtimeMs, MIN_RUNTIME), MAX_RUNTIME);
             this.bufferedInsights.add({
                 ...commonWorkflowData,
                 type: 'runtime_ms',

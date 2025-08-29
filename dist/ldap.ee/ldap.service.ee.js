@@ -212,9 +212,23 @@ let LdapService = class LdapService {
         const startedAt = new Date();
         const localAdUsers = await (0, helpers_ee_1.getLdapIds)();
         const { usersToCreate, usersToUpdate, usersToDisable } = this.getUsersToProcess(adUsers, localAdUsers);
+        const filteredUsersToCreate = usersToCreate.filter(([id, user]) => {
+            if (!(0, db_1.isValidEmail)(user.email)) {
+                this.logger.warn(`LDAP - Invalid email format for user ${id}`);
+                return false;
+            }
+            return true;
+        });
+        const filteredUsersToUpdate = usersToUpdate.filter(([id, user]) => {
+            if (!(0, db_1.isValidEmail)(user.email)) {
+                this.logger.warn(`LDAP - Invalid email format for user ${id}`);
+                return false;
+            }
+            return true;
+        });
         this.logger.debug('LDAP - Users to process', {
-            created: usersToCreate.length,
-            updated: usersToUpdate.length,
+            created: filteredUsersToCreate.length,
+            updated: filteredUsersToUpdate.length,
             disabled: usersToDisable.length,
         });
         const endedAt = new Date();
@@ -222,7 +236,7 @@ let LdapService = class LdapService {
         let errorMessage = '';
         try {
             if (mode === 'live') {
-                await (0, helpers_ee_1.processUsers)(usersToCreate, usersToUpdate, usersToDisable);
+                await (0, helpers_ee_1.processUsers)(filteredUsersToCreate, filteredUsersToUpdate, usersToDisable);
             }
         }
         catch (error) {
@@ -234,8 +248,8 @@ let LdapService = class LdapService {
         await (0, helpers_ee_1.saveLdapSynchronization)({
             startedAt,
             endedAt,
-            created: usersToCreate.length,
-            updated: usersToUpdate.length,
+            created: filteredUsersToCreate.length,
+            updated: filteredUsersToUpdate.length,
             disabled: usersToDisable.length,
             scanned: adUsers.length,
             runMode: mode,
@@ -245,7 +259,7 @@ let LdapService = class LdapService {
         this.eventService.emit('ldap-general-sync-finished', {
             type: !this.syncTimer ? 'scheduled' : `manual_${mode}`,
             succeeded: true,
-            usersSynced: usersToCreate.length + usersToUpdate.length + usersToDisable.length,
+            usersSynced: filteredUsersToCreate.length + filteredUsersToUpdate.length + usersToDisable.length,
             error: errorMessage,
         });
         this.logger.debug('LDAP - Synchronization finished successfully');
@@ -312,7 +326,7 @@ let LdapService = class LdapService {
                 await (0, helpers_ee_1.updateLdapUserOnLocalDb)(ldapAuthIdentity, ldapAttributesValues);
             }
         }
-        return (await (0, helpers_ee_1.getAuthIdentityByLdapId)(ldapId))?.user;
+        return (await (0, helpers_ee_1.getUserByLdapId)(ldapId)) ?? undefined;
     }
 };
 exports.LdapService = LdapService;

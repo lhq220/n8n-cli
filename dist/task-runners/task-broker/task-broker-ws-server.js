@@ -73,7 +73,11 @@ let TaskBrokerWsServer = class TaskBrokerWsServer {
         let isConnected = false;
         const onMessage = async (data) => {
             try {
-                const buffer = Array.isArray(data) ? Buffer.concat(data) : Buffer.from(data);
+                const buffer = Array.isArray(data)
+                    ? Buffer.concat(data)
+                    : data instanceof ArrayBuffer
+                        ? Buffer.from(data)
+                        : data;
                 const message = JSON.parse(buffer.toString('utf8'));
                 if (!isConnected && message.type !== 'runner:info') {
                     return;

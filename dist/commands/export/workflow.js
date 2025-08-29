@@ -89,7 +89,7 @@ let ExportWorkflowsCommand = class ExportWorkflowsCommand extends base_command_1
         }
         const workflows = await di_1.Container.get(db_1.WorkflowRepository).find({
             where: flags.id ? { id: flags.id } : {},
-            relations: ['tags'],
+            relations: ['tags', 'shared', 'shared.project'],
         });
         if (workflows.length === 0) {
             throw new n8n_workflow_1.UserError('No workflows found with specified filters');

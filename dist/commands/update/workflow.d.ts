@@ -5,13 +5,13 @@ declare const flagsSchema: z.ZodObject<{
     all: z.ZodOptional<z.ZodBoolean>;
     id: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    all?: boolean | undefined;
     id?: string | undefined;
     active?: string | undefined;
+    all?: boolean | undefined;
 }, {
-    all?: boolean | undefined;
     id?: string | undefined;
     active?: string | undefined;
+    all?: boolean | undefined;
 }>;
 export declare class UpdateWorkflowCommand extends BaseCommand<z.infer<typeof flagsSchema>> {
     run(): Promise<void>;

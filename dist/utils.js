@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.shouldAssignExecuteMethod = exports.isPositiveInteger = exports.assertNever = exports.isIntegerString = exports.toError = exports.findCliWorkflowStart = exports.findSubworkflowStart = void 0;
+exports.getAllKeyPaths = exports.shouldAssignExecuteMethod = exports.isPositiveInteger = exports.assertNever = exports.isIntegerString = exports.toError = exports.findCliWorkflowStart = exports.findSubworkflowStart = void 0;
 exports.isWorkflowIdValid = isWorkflowIdValid;
 exports.removeTrailingSlash = removeTrailingSlash;
 exports.rightDiff = rightDiff;
@@ -59,4 +59,22 @@ const shouldAssignExecuteMethod = (nodeType) => {
         (!nodeType.methods || isDeclarativeNode));
 };
 exports.shouldAssignExecuteMethod = shouldAssignExecuteMethod;
+const getAllKeyPaths = (obj, currentPath = '', paths = [], valueFilter) => {
+    if (Array.isArray(obj)) {
+        obj.forEach((item, index) => (0, exports.getAllKeyPaths)(item, `${currentPath}[${index}]`, paths, valueFilter));
+    }
+    else if (obj && typeof obj === 'object') {
+        for (const [key, value] of Object.entries(obj)) {
+            const newPath = currentPath ? `${currentPath}.${key}` : key;
+            if (typeof value === 'string' && valueFilter(value)) {
+                paths.push(newPath);
+            }
+            else {
+                (0, exports.getAllKeyPaths)(value, newPath, paths, valueFilter);
+            }
+        }
+    }
+    return paths;
+};
+exports.getAllKeyPaths = getAllKeyPaths;
 //# sourceMappingURL=utils.js.map

@@ -151,12 +151,30 @@ let TestWebhooks = class TestWebhooks {
         if (timeout)
             clearTimeout(timeout);
     }
+    async getWebhooksFromPath(rawPath) {
+        const path = (0, utils_1.removeTrailingSlash)(rawPath);
+        const webhooks = [];
+        const registrations = await this.registrations.getRegistrationsHash();
+        for (const httpMethod of ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']) {
+            const key = this.registrations.toKey({ httpMethod, path });
+            let webhook = registrations?.[key]?.webhook;
+            if (!webhook) {
+                const [webhookId, ...segments] = path.split('/');
+                const key = this.registrations.toKey({ httpMethod, path, webhookId });
+                if (registrations?.[key]) {
+                    webhook = this.getActiveWebhookFromRegistration(segments.join('/'), registrations?.[key]);
+                }
+            }
+            if (webhook) {
+                webhooks.push(webhook);
+            }
+        }
+        return webhooks;
+    }
     async getWebhookMethods(rawPath) {
         const path = (0, utils_1.removeTrailingSlash)(rawPath);
-        const allKeys = await this.registrations.getAllKeys();
-        const webhookMethods = allKeys
-            .filter((key) => key.includes(path))
-            .map((key) => key.split('|')[0]);
+        const webhooks = await this.getWebhooksFromPath(path);
+        const webhookMethods = webhooks.map((webhook) => webhook.httpMethod);
         if (!webhookMethods.length)
             throw new webhook_not_found_error_1.WebhookNotFoundError({ path });
         return webhookMethods;
@@ -256,25 +274,22 @@ let TestWebhooks = class TestWebhooks {
         }
         return foundWebhook;
     }
-    async getActiveWebhook(httpMethod, path, webhookId) {
-        const key = this.registrations.toKey({ httpMethod, path, webhookId });
-        let webhook;
-        let maxMatches = 0;
+    getActiveWebhookFromRegistration(path, registration) {
         const pathElementsSet = new Set(path.split('/'));
-        const registration = await this.registrations.get(key);
-        if (!registration)
-            return;
         const { webhook: dynamicWebhook } = registration;
         const staticElements = dynamicWebhook.path.split('/').filter((ele) => !ele.startsWith(':'));
         const allStaticExist = staticElements.every((staticEle) => pathElementsSet.has(staticEle));
-        if (allStaticExist && staticElements.length > maxMatches) {
-            maxMatches = staticElements.length;
-            webhook = dynamicWebhook;
+        if ((allStaticExist && staticElements.length > 0) || staticElements.length === 0) {
+            return dynamicWebhook;
         }
-        else if (staticElements.length === 0 && !webhook) {
-            webhook = dynamicWebhook;
-        }
-        return webhook;
+        return undefined;
+    }
+    async getActiveWebhook(httpMethod, path, webhookId) {
+        const key = this.registrations.toKey({ httpMethod, path, webhookId });
+        const registration = await this.registrations.get(key);
+        if (!registration)
+            return;
+        return this.getActiveWebhookFromRegistration(path, registration);
     }
     async deactivateWebhooks(workflow) {
         const allRegistrations = await this.registrations.getAllRegistrations();

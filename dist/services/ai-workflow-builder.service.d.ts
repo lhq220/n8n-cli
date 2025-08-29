@@ -4,13 +4,15 @@ import { GlobalConfig } from '@n8n/config';
 import type { IUser } from 'n8n-workflow';
 import { License } from '../license';
 import { NodeTypes } from '../node-types';
+import { UrlService } from '../services/url.service';
 export declare class WorkflowBuilderService {
     private readonly nodeTypes;
     private readonly license;
     private readonly config;
     private readonly logger;
+    private readonly urlService;
     private service;
-    constructor(nodeTypes: NodeTypes, license: License, config: GlobalConfig, logger: Logger);
+    constructor(nodeTypes: NodeTypes, license: License, config: GlobalConfig, logger: Logger, urlService: UrlService);
     private getService;
     chat(payload: ChatPayload, user: IUser, abortSignal?: AbortSignal): AsyncGenerator<import("@n8n/ai-workflow-builder").StreamOutput, void, unknown>;
     getSessions(workflowId: string | undefined, user: IUser): Promise<{

@@ -1,13 +1,14 @@
-import { Logger } from '@n8n/backend-common';
+import { Logger, ModuleRegistry } from '@n8n/backend-common';
 import { GlobalConfig } from '@n8n/config';
 import type { DirectoryLoader, Types } from 'n8n-core';
 import { ErrorReporter, InstanceSettings, PackageDirectoryLoader } from 'n8n-core';
-import type { INodeTypeBaseDescription, INodeTypeDescription, LoadedClass, ICredentialType, INodeType, IVersionedNodeType, LoadedNodesAndCredentials } from 'n8n-workflow';
+import type { INodeTypeBaseDescription, INodeTypeDescription, LoadedClass, ICredentialType, INodeType, IVersionedNodeType, INodeProperties, LoadedNodesAndCredentials } from 'n8n-workflow';
 export declare class LoadNodesAndCredentials {
     private readonly logger;
     private readonly errorReporter;
     private readonly instanceSettings;
     private readonly globalConfig;
+    private readonly moduleRegistry;
     private known;
     loaded: LoadedNodesAndCredentials;
     types: Types;
@@ -183,7 +184,7 @@ export declare class LoadNodesAndCredentials {
         at(index: number): string | undefined;
     };
     private postProcessors;
-    constructor(logger: Logger, errorReporter: ErrorReporter, instanceSettings: InstanceSettings, globalConfig: GlobalConfig);
+    constructor(logger: Logger, errorReporter: ErrorReporter, instanceSettings: InstanceSettings, globalConfig: GlobalConfig, moduleRegistry: ModuleRegistry);
     init(): Promise<void>;
     addPostProcessor(fn: () => Promise<void>): void;
     isKnownNode(type: string): boolean;
@@ -199,6 +200,7 @@ export declare class LoadNodesAndCredentials {
         resource?: string;
         operation?: string;
     }): string | undefined;
+    findLastCalloutIndex(properties: INodeProperties[]): number;
     getCustomDirectories(): string[];
     private loadNodesFromCustomDirectories;
     loadPackage(packageName: string): Promise<PackageDirectoryLoader>;

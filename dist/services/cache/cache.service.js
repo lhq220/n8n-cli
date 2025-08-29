@@ -68,7 +68,9 @@ let CacheService = class CacheService extends typed_emitter_1.TypedEmitter {
             const { RedisClientService } = await Promise.resolve().then(() => __importStar(require('../redis-client.service')));
             const redisClientService = di_1.Container.get(RedisClientService);
             const prefixBase = this.globalConfig.redis.prefix;
-            const prefix = redisClientService.toValidPrefix(`${prefixBase}:${this.globalConfig.cache.redis.prefix}:`);
+            const cachePrefix = this.globalConfig.cache.redis.prefix;
+            const hashTagPart = `${prefixBase}:${cachePrefix}`;
+            const prefix = redisClientService.toValidPrefix(hashTagPart) + ':';
             const redisClient = redisClientService.createClient({
                 type: 'cache(n8n)',
                 extraOptions: { keyPrefix: prefix },

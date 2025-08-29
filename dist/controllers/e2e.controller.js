@@ -97,6 +97,7 @@ let E2EController = E2EController_1 = class E2EController {
             [constants_1.LICENSE_FEATURES.API_KEY_SCOPES]: false,
             [constants_1.LICENSE_FEATURES.OIDC]: false,
             [constants_1.LICENSE_FEATURES.MFA_ENFORCEMENT]: false,
+            [constants_1.LICENSE_FEATURES.WORKFLOW_DIFFS]: false,
         };
         this.numericFeatures = {
             [constants_1.LICENSE_QUOTAS.TRIGGER_LIMIT]: E2EController_1.numericFeaturesDefaults[constants_1.LICENSE_QUOTAS.TRIGGER_LIMIT],
@@ -223,21 +224,27 @@ let E2EController = E2EController_1 = class E2EController {
                 id: (0, uuid_1.v4)(),
                 ...owner,
                 password: await this.passwordUtility.hash(owner.password),
-                role: 'global:owner',
+                role: {
+                    slug: db_1.GLOBAL_OWNER_ROLE.slug,
+                },
             }),
         ];
         userCreatePromises.push(this.userRepository.createUserWithProject({
             id: (0, uuid_1.v4)(),
             ...admin,
             password: await this.passwordUtility.hash(admin.password),
-            role: 'global:admin',
+            role: {
+                slug: db_1.GLOBAL_ADMIN_ROLE.slug,
+            },
         }));
         for (const { password, ...payload } of members) {
             userCreatePromises.push(this.userRepository.createUserWithProject({
                 id: (0, uuid_1.v4)(),
                 ...payload,
                 password: await this.passwordUtility.hash(password),
-                role: 'global:member',
+                role: {
+                    slug: db_1.GLOBAL_MEMBER_ROLE.slug,
+                },
             }));
         }
         const [newOwner] = await Promise.all(userCreatePromises);

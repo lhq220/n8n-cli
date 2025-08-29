@@ -27,6 +27,7 @@ export declare class TestRunnerService {
     constructor(logger: Logger, telemetry: Telemetry, workflowRepository: WorkflowRepository, workflowRunner: WorkflowRunner, activeExecutions: ActiveExecutions, testRunRepository: TestRunRepository, testCaseExecutionRepository: TestCaseExecutionRepository, errorReporter: ErrorReporter);
     private findEvaluationTriggerNode;
     private validateEvaluationTriggerNode;
+    private hasModelNodeConnected;
     private validateSetMetricsNodes;
     private validateSetOutputsNodes;
     private validateWorkflowConfiguration;

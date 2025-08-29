@@ -35,9 +35,10 @@ let ConcurrencyControlService = class ConcurrencyControlService {
         this.globalConfig = globalConfig;
         this.limitsToReport = exports.CLOUD_TEMP_REPORTABLE_THRESHOLDS.map((t) => exports.CLOUD_TEMP_PRODUCTION_LIMIT - t);
         this.logger = this.logger.scoped('concurrency');
+        const { productionLimit, evaluationLimit } = this.globalConfig.executions.concurrency;
         this.limits = new Map([
-            ['production', config_2.default.getEnv('executions.concurrency.productionLimit')],
-            ['evaluation', config_2.default.getEnv('executions.concurrency.evaluationLimit')],
+            ['production', productionLimit],
+            ['evaluation', evaluationLimit],
         ]);
         this.limits.forEach((limit, type) => {
             if (limit === 0) {

@@ -17,6 +17,7 @@ export declare class TestWebhookRegistrationsService {
     get(key: string): Promise<TestWebhookRegistration | undefined>;
     getAllKeys(): Promise<string[]>;
     getAllRegistrations(): Promise<TestWebhookRegistration[]>;
+    getRegistrationsHash(): Promise<import("../services/cache/cache.types").MaybeHash<TestWebhookRegistration>>;
     deregisterAll(): Promise<void>;
     toKey(webhook: Pick<IWebhookData, 'webhookId' | 'httpMethod' | 'path'>): string;
 }

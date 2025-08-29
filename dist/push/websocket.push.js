@@ -21,7 +21,11 @@ let WebSocketPush = class WebSocketPush extends abstract_push_1.AbstractPush {
         super.add(pushRef, userId, connection);
         const onMessage = async (data) => {
             try {
-                const buffer = Array.isArray(data) ? Buffer.concat(data) : Buffer.from(data);
+                const buffer = Array.isArray(data)
+                    ? Buffer.concat(data)
+                    : data instanceof ArrayBuffer
+                        ? Buffer.from(data)
+                        : data;
                 const msg = JSON.parse(buffer.toString('utf8'));
                 if (await this.isClientHeartbeat(msg)) {
                     return;

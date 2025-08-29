@@ -43,12 +43,12 @@ let WebhookService = class WebhookService {
             void this.cacheService.set(cacheKey, dbStaticWebhook);
             return dbStaticWebhook;
         }
-        return await this.findDynamicWebhook(method, path);
+        return await this.findDynamicWebhook(path, method);
     }
     async findStaticWebhook(method, path) {
         return await this.webhookRepository.findOneBy({ webhookPath: path, method });
     }
-    async findDynamicWebhook(method, path) {
+    async findDynamicWebhook(path, method) {
         const [uuidSegment, ...otherSegments] = path.split('/');
         const dynamicWebhooks = await this.webhookRepository.findBy({
             webhookId: uuidSegment,
@@ -90,10 +90,15 @@ let WebhookService = class WebhookService {
         void this.cacheService.deleteMany(webhooks.map((w) => w.cacheKey));
         return await this.webhookRepository.remove(webhooks);
     }
-    async getWebhookMethods(path) {
-        return await this.webhookRepository
-            .find({ select: ['method'], where: { webhookPath: path } })
+    async getWebhookMethods(rawPath) {
+        const staticMethods = await this.webhookRepository
+            .find({ select: ['method'], where: { webhookPath: rawPath } })
             .then((rows) => rows.map((r) => r.method));
+        if (staticMethods.length > 0) {
+            return staticMethods;
+        }
+        const dynamicWebhooks = await this.findDynamicWebhook(rawPath);
+        return dynamicWebhooks ? [dynamicWebhooks.method] : [];
     }
     isDynamicPath(rawPath) {
         const firstSlashIndex = rawPath.indexOf('/');

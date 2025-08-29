@@ -55,7 +55,6 @@ const promises_1 = require("fs/promises");
 const uniq_1 = __importDefault(require("lodash/uniq"));
 const n8n_core_1 = require("n8n-core");
 const path_1 = __importDefault(require("path"));
-const community_packages_config_1 = require("../community-packages/community-packages.config");
 const config_2 = __importDefault(require("../config"));
 const constants_2 = require("../constants");
 const credential_types_1 = require("../credential-types");
@@ -64,6 +63,7 @@ const helpers_ee_1 = require("../ldap.ee/helpers.ee");
 const license_1 = require("../license");
 const load_nodes_and_credentials_1 = require("../load-nodes-and-credentials");
 const mfa_service_1 = require("../mfa/mfa.service");
+const community_packages_config_1 = require("../modules/community-packages/community-packages.config");
 const public_api_1 = require("../public-api");
 const push_config_1 = require("../push/push.config");
 const saml_helpers_1 = require("../sso.ee/saml/saml-helpers");
@@ -92,7 +92,7 @@ let FrontendService = class FrontendService {
         void this.generateTypes();
         this.initSettings();
         if (di_1.Container.get(community_packages_config_1.CommunityPackagesConfig).enabled) {
-            void Promise.resolve().then(() => __importStar(require('../community-packages/community-packages.service'))).then(({ CommunityPackagesService }) => {
+            void Promise.resolve().then(() => __importStar(require('../modules/community-packages/community-packages.service'))).then(({ CommunityPackagesService }) => {
                 this.communityPackagesService = di_1.Container.get(CommunityPackagesService);
             });
         }
@@ -136,12 +136,12 @@ let FrontendService = class FrontendService {
             endpointWebhook: this.globalConfig.endpoints.webhook,
             endpointWebhookTest: this.globalConfig.endpoints.webhookTest,
             endpointWebhookWaiting: this.globalConfig.endpoints.webhookWaiting,
-            saveDataErrorExecution: config_2.default.getEnv('executions.saveDataOnError'),
-            saveDataSuccessExecution: config_2.default.getEnv('executions.saveDataOnSuccess'),
-            saveManualExecutions: config_2.default.getEnv('executions.saveDataManualExecutions'),
-            saveExecutionProgress: config_2.default.getEnv('executions.saveExecutionProgress'),
-            executionTimeout: config_2.default.getEnv('executions.timeout'),
-            maxExecutionTimeout: config_2.default.getEnv('executions.maxTimeout'),
+            saveDataErrorExecution: this.globalConfig.executions.saveDataOnError,
+            saveDataSuccessExecution: this.globalConfig.executions.saveDataOnSuccess,
+            saveManualExecutions: this.globalConfig.executions.saveDataManualExecutions,
+            saveExecutionProgress: this.globalConfig.executions.saveExecutionProgress,
+            executionTimeout: this.globalConfig.executions.timeout,
+            maxExecutionTimeout: this.globalConfig.executions.maxTimeout,
             workflowCallerPolicyDefaultOption: this.globalConfig.workflows.callerPolicyDefaultOption,
             timezone: this.globalConfig.generic.timezone,
             urlBaseWebhook: this.urlService.getWebhookBaseUrl(),
@@ -149,7 +149,7 @@ let FrontendService = class FrontendService {
             binaryDataMode: this.binaryDataConfig.mode,
             nodeJsVersion: process.version.replace(/^v/, ''),
             versionCli: constants_2.N8N_VERSION,
-            concurrency: config_2.default.getEnv('executions.concurrency.productionLimit'),
+            concurrency: this.globalConfig.executions.concurrency.productionLimit,
             authCookie: {
                 secure: this.globalConfig.auth.cookie.secure,
             },
@@ -247,6 +247,7 @@ let FrontendService = class FrontendService {
                 workerView: false,
                 advancedPermissions: false,
                 apiKeyScopes: false,
+                workflowDiffs: false,
                 projects: {
                     team: {
                         limit: 0,
@@ -360,6 +361,7 @@ let FrontendService = class FrontendService {
             workerView: this.license.isWorkerViewLicensed(),
             advancedPermissions: this.license.isAdvancedPermissionsLicensed(),
             apiKeyScopes: this.license.isApiKeyScopesEnabled(),
+            workflowDiffs: this.licenseState.isWorkflowDiffsLicensed(),
         });
         if (this.license.isLdapEnabled()) {
             Object.assign(this.settings.sso.ldap, {

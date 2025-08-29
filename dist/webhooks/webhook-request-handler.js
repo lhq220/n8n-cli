@@ -39,10 +39,10 @@ const di_1 = require("@n8n/di");
 const n8n_core_1 = require("n8n-core");
 const n8n_workflow_1 = require("n8n-workflow");
 const promises_1 = require("stream/promises");
-const webhook_service_1 = require("./webhook.service");
 const webhook_not_found_error_1 = require("../errors/response-errors/webhook-not-found.error");
 const ResponseHelper = __importStar(require("../response-helper"));
 const webhook_response_1 = require("../webhooks/webhook-response");
+const webhook_service_1 = require("../webhooks/webhook.service");
 const WEBHOOK_METHODS = ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT'];
 class WebhookRequestHandler {
     constructor(webhookManager) {
@@ -105,31 +105,19 @@ class WebhookRequestHandler {
         const { stream, code, headers } = webhookResponse;
         this.setResponseStatus(res, code);
         this.setResponseHeaders(res, headers);
-        const contentType = res.getHeader('content-type');
-        const needsSandbox = contentType && (0, n8n_core_1.isHtmlRenderedContentType)(contentType);
-        const streamToSend = needsSandbox ? stream.pipe((0, n8n_core_1.createHtmlSandboxTransformStream)()) : stream;
-        streamToSend.pipe(res, { end: false });
-        await (0, promises_1.finished)(streamToSend);
+        stream.pipe(res, { end: false });
+        await (0, promises_1.finished)(stream);
         process.nextTick(() => res.end());
     }
     sendStaticResponse(res, webhookResponse) {
         const { body, code, headers } = webhookResponse;
         this.setResponseStatus(res, code);
         this.setResponseHeaders(res, headers);
-        const contentType = res.getHeader('content-type');
         if (typeof body === 'string') {
-            const needsSandbox = !contentType || (0, n8n_core_1.isHtmlRenderedContentType)(contentType);
-            const bodyToSend = needsSandbox ? (0, n8n_core_1.sandboxHtmlResponse)(body) : body;
-            res.send(bodyToSend);
+            res.send(body);
         }
         else {
-            const needsSandbox = contentType && (0, n8n_core_1.isHtmlRenderedContentType)(contentType);
-            if (needsSandbox) {
-                res.send((0, n8n_core_1.sandboxHtmlResponse)(body));
-            }
-            else {
-                res.json(body);
-            }
+            res.json(body);
         }
     }
     setResponseStatus(res, statusCode) {
@@ -142,6 +130,11 @@ class WebhookRequestHandler {
             for (const [name, value] of headers.entries()) {
                 res.setHeader(name, value);
             }
+        }
+        const contentType = res.getHeader('content-type');
+        const needsSandbox = !contentType || (0, n8n_core_1.isHtmlRenderedContentType)(contentType);
+        if (needsSandbox && !(0, n8n_core_1.isWebhookHtmlSandboxingDisabled)()) {
+            res.setHeader('Content-Security-Policy', (0, n8n_core_1.getWebhookSandboxCSP)());
         }
     }
     async setupCorsHeaders(req, res) {

@@ -9,3 +9,4 @@ export declare function rightDiff<T1, T2>([arr1, keyExtractor1]: [T1[], (item: T
 export declare const assertNever: (_value: never) => void;
 export declare const isPositiveInteger: (maybeInt: string) => boolean;
 export declare const shouldAssignExecuteMethod: (nodeType: INodeType) => boolean;
+export declare const getAllKeyPaths: (obj: unknown, currentPath: string | undefined, paths: string[] | undefined, valueFilter: (value: string) => boolean) => string[];

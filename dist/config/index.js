@@ -81,15 +81,6 @@ if (!constants_1.inE2ETests && !backend_common_1.inTest) {
         }
     });
 }
-config.validate({
-    allowed: 'strict',
-});
-const userManagement = config.get('userManagement');
-if (userManagement.jwtRefreshTimeoutHours >= userManagement.jwtSessionDurationHours) {
-    if (!backend_common_1.inTest)
-        logger.warn('N8N_USER_MANAGEMENT_JWT_REFRESH_TIMEOUT_HOURS needs to smaller than N8N_USER_MANAGEMENT_JWT_DURATION_HOURS. Setting N8N_USER_MANAGEMENT_JWT_REFRESH_TIMEOUT_HOURS to 0 for now.');
-    config.set('userManagement.jwtRefreshTimeoutHours', 0);
-}
 (0, n8n_workflow_1.setGlobalState)({
     defaultTimezone: globalConfig.generic.timezone,
 });

@@ -83,7 +83,7 @@ let SamlController = class SamlController {
                     authenticationMethod: 'saml',
                 });
                 if ((0, saml_helpers_1.isSamlLicensedAndEnabled)()) {
-                    this.authService.issueCookie(res, loginResult.authenticatedUser, false, req.browserId);
+                    this.authService.issueCookie(res, loginResult.authenticatedUser, true, req.browserId);
                     if (loginResult.onboardingRequired) {
                         return res.redirect(this.urlService.getInstanceBaseUrl() + '/saml/onboarding');
                     }

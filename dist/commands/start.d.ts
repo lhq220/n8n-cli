@@ -5,15 +5,12 @@ import { Server } from '../server';
 declare const flagsSchema: z.ZodObject<{
     open: z.ZodOptional<z.ZodBoolean>;
     tunnel: z.ZodOptional<z.ZodBoolean>;
-    reinstallMissingPackages: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     open?: boolean | undefined;
     tunnel?: boolean | undefined;
-    reinstallMissingPackages?: boolean | undefined;
 }, {
     open?: boolean | undefined;
     tunnel?: boolean | undefined;
-    reinstallMissingPackages?: boolean | undefined;
 }>;
 export declare class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
     protected activeWorkflowManager: ActiveWorkflowManager;

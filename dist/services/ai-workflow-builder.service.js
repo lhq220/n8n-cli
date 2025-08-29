@@ -18,12 +18,14 @@ const ai_assistant_sdk_1 = require("@n8n_io/ai-assistant-sdk");
 const constants_1 = require("../constants");
 const license_1 = require("../license");
 const node_types_1 = require("../node-types");
+const url_service_1 = require("../services/url.service");
 let WorkflowBuilderService = class WorkflowBuilderService {
-    constructor(nodeTypes, license, config, logger) {
+    constructor(nodeTypes, license, config, logger, urlService) {
         this.nodeTypes = nodeTypes;
         this.license = license;
         this.config = config;
         this.logger = logger;
+        this.urlService = urlService;
     }
     async getService() {
         if (!this.service) {
@@ -39,7 +41,7 @@ let WorkflowBuilderService = class WorkflowBuilderService {
                     n8nVersion: constants_1.N8N_VERSION,
                 });
             }
-            this.service = new ai_workflow_builder_1.AiWorkflowBuilderService(this.nodeTypes, client, this.logger);
+            this.service = new ai_workflow_builder_1.AiWorkflowBuilderService(this.nodeTypes, client, this.logger, this.urlService.getInstanceBaseUrl());
         }
         return this.service;
     }
@@ -59,6 +61,7 @@ exports.WorkflowBuilderService = WorkflowBuilderService = __decorate([
     __metadata("design:paramtypes", [node_types_1.NodeTypes,
         license_1.License,
         config_1.GlobalConfig,
-        backend_common_1.Logger])
+        backend_common_1.Logger,
+        url_service_1.UrlService])
 ], WorkflowBuilderService);
 //# sourceMappingURL=ai-workflow-builder.service.js.map

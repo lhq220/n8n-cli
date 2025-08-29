@@ -189,9 +189,12 @@ let SamlService = class SamlService {
         const attributes = await this.getAttributesFromLoginResponse(req, binding);
         if (attributes.email) {
             const lowerCasedEmail = attributes.email.toLowerCase();
+            if (!(0, db_1.isValidEmail)(lowerCasedEmail)) {
+                throw new bad_request_error_1.BadRequestError('Invalid email format');
+            }
             const user = await this.userRepository.findOne({
                 where: { email: lowerCasedEmail },
-                relations: ['authIdentities'],
+                relations: ['authIdentities', 'role'],
             });
             if (user) {
                 if (user.authIdentities.find((e) => e.providerType === 'saml' && e.providerId === attributes.userPrincipalName)) {

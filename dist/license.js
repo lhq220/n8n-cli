@@ -316,16 +316,16 @@ let License = class License {
         return constants_1.UNLIMITED_LICENSE_QUOTA;
     }
     getAiCredits() {
-        return 9999999999999999;
+        return 999999999;
     }
     getWorkflowHistoryPruneLimit() {
         return constants_1.UNLIMITED_LICENSE_QUOTA;
     }
     getTeamProjectLimit() {
-        return 0;
+        return constants_1.UNLIMITED_LICENSE_QUOTA;
     }
     getPlanName() {
-        return 'Community';
+        return this.getValue('planName') ?? 'Community';
     }
     getInfo() {
         if (!this.manager) {

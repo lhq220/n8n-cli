@@ -41,14 +41,14 @@ let ProjectController = class ProjectController {
             const project = await this.projectsService.createTeamProject(req.user, payload);
             this.eventService.emit('team-project-created', {
                 userId: req.user.id,
-                role: req.user.role,
+                role: req.user.role.slug,
             });
             return {
                 ...project,
                 role: 'project:admin',
                 scopes: [
                     ...(0, permissions_1.combineScopes)({
-                        global: (0, permissions_1.getRoleScopes)(req.user.role),
+                        global: (0, permissions_1.getAuthPrincipalScopes)(req.user),
                         project: (0, permissions_1.getRoleScopes)('project:admin'),
                     }),
                 ],
@@ -74,7 +74,7 @@ let ProjectController = class ProjectController {
             const result = Object.assign(this.projectRepository.create(pr.project), { role: pr.role, scopes: [] });
             if (result.scopes) {
                 result.scopes.push(...(0, permissions_1.combineScopes)({
-                    global: (0, permissions_1.getRoleScopes)(req.user.role),
+                    global: (0, permissions_1.getAuthPrincipalScopes)(req.user),
                     project: (0, permissions_1.getRoleScopes)(pr.role),
                 }));
             }
@@ -82,11 +82,11 @@ let ProjectController = class ProjectController {
         }
         for (const project of otherTeamProject) {
             const result = Object.assign(this.projectRepository.create(project), {
-                role: req.user.role,
+                role: req.user.role.slug,
                 scopes: [],
             });
             if (result.scopes) {
-                result.scopes.push(...(0, permissions_1.combineScopes)({ global: (0, permissions_1.getRoleScopes)(req.user.role) }));
+                result.scopes.push(...(0, permissions_1.combineScopes)({ global: (0, permissions_1.getAuthPrincipalScopes)(req.user) }));
             }
             results.push(result);
         }
@@ -104,7 +104,7 @@ let ProjectController = class ProjectController {
         }
         const scopes = [
             ...(0, permissions_1.combineScopes)({
-                global: (0, permissions_1.getRoleScopes)(req.user.role),
+                global: (0, permissions_1.getAuthPrincipalScopes)(req.user),
                 project: (0, permissions_1.getRoleScopes)('project:personalOwner'),
             }),
         ];
@@ -134,7 +134,7 @@ let ProjectController = class ProjectController {
             })),
             scopes: [
                 ...(0, permissions_1.combineScopes)({
-                    global: (0, permissions_1.getRoleScopes)(req.user.role),
+                    global: (0, permissions_1.getAuthPrincipalScopes)(req.user),
                     ...(myRelation ? { project: (0, permissions_1.getRoleScopes)(myRelation.role) } : {}),
                 }),
             ],
@@ -162,7 +162,7 @@ let ProjectController = class ProjectController {
             }
             this.eventService.emit('team-project-updated', {
                 userId: req.user.id,
-                role: req.user.role,
+                role: req.user.role.slug,
                 members: relations,
                 projectId,
             });
@@ -174,7 +174,7 @@ let ProjectController = class ProjectController {
         });
         this.eventService.emit('team-project-deleted', {
             userId: req.user.id,
-            role: req.user.role,
+            role: req.user.role.slug,
             projectId,
             removalType: query.transferId !== undefined ? 'transfer' : 'delete',
             targetProjectId: query.transferId,

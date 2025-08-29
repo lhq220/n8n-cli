@@ -1,16 +1,14 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.toSaveSettings = toSaveSettings;
-const config_1 = __importDefault(require("../config"));
+const config_1 = require("@n8n/config");
+const di_1 = require("@n8n/di");
 function toSaveSettings(workflowSettings = {}) {
     const DEFAULTS = {
-        ERROR: config_1.default.getEnv('executions.saveDataOnError'),
-        SUCCESS: config_1.default.getEnv('executions.saveDataOnSuccess'),
-        MANUAL: config_1.default.getEnv('executions.saveDataManualExecutions'),
-        PROGRESS: config_1.default.getEnv('executions.saveExecutionProgress'),
+        ERROR: di_1.Container.get(config_1.GlobalConfig).executions.saveDataOnError,
+        SUCCESS: di_1.Container.get(config_1.GlobalConfig).executions.saveDataOnSuccess,
+        MANUAL: di_1.Container.get(config_1.GlobalConfig).executions.saveDataManualExecutions,
+        PROGRESS: di_1.Container.get(config_1.GlobalConfig).executions.saveExecutionProgress,
     };
     const { saveDataErrorExecution = DEFAULTS.ERROR, saveDataSuccessExecution = DEFAULTS.SUCCESS, saveManualExecutions = DEFAULTS.MANUAL, saveExecutionProgress = DEFAULTS.PROGRESS, } = workflowSettings ?? {};
     return {

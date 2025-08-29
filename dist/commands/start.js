@@ -74,17 +74,12 @@ const executions_pruning_service_1 = require("../services/pruning/executions-pru
 const url_service_1 = require("../services/url.service");
 const wait_tracker_1 = require("../wait-tracker");
 const workflow_runner_1 = require("../workflow-runner");
-const community_packages_config_1 = require("../community-packages/community-packages.config");
 const open = require('open');
 const flagsSchema = zod_1.z.object({
     open: zod_1.z.boolean().alias('o').describe('opens the UI automatically in browser').optional(),
     tunnel: zod_1.z
         .boolean()
         .describe('runs the webhooks via a hooks.n8n.cloud tunnel server. Use only for testing and development!')
-        .optional(),
-    reinstallMissingPackages: zod_1.z
-        .boolean()
-        .describe('Attempts to self heal n8n if packages with nodes are missing. Might drastically increase startup times.')
         .optional(),
 });
 let Start = class Start extends base_command_1.BaseCommand {
@@ -168,21 +163,8 @@ let Start = class Start extends base_command_1.BaseCommand {
             scopedLogger.debug('Starting main instance in scaling mode');
             scopedLogger.debug(`Host ID: ${this.instanceSettings.hostId}`);
         }
-        const { flags } = this;
-        const communityPackagesConfig = di_1.Container.get(community_packages_config_1.CommunityPackagesConfig);
-        if (flags.reinstallMissingPackages) {
-            if (communityPackagesConfig.enabled) {
-                this.logger.warn('`--reinstallMissingPackages` is deprecated: Please use the env variable `N8N_REINSTALL_MISSING_PACKAGES` instead');
-                communityPackagesConfig.reinstallMissing = true;
-            }
-            else {
-                this.logger.warn('`--reinstallMissingPackages` was passed, but community packages are disabled');
-            }
-        }
-        if (process.env.OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS === 'true') {
-            this.needsTaskRunner = false;
-        }
         await super.init();
+        await di_1.Container.get(db_1.AuthRolesService).init();
         this.activeWorkflowManager = di_1.Container.get(active_workflow_manager_1.ActiveWorkflowManager);
         const isMultiMainEnabled = config_1.default.getEnv('executions.mode') === 'queue' && this.globalConfig.multiMainSetup.enabled;
         this.instanceSettings.setMultiMainEnabled(isMultiMainEnabled);
@@ -217,6 +199,10 @@ let Start = class Start extends base_command_1.BaseCommand {
         }
         await this.moduleRegistry.initModules();
         if (this.instanceSettings.isMultiMain) {
+            if (this.globalConfig.endpoints.metrics.enable) {
+                const { PrometheusMetricsService } = await Promise.resolve().then(() => __importStar(require('../metrics/prometheus-metrics.service')));
+                di_1.Container.get(PrometheusMetricsService);
+            }
             di_1.Container.get(multi_main_setup_ee_1.MultiMainSetup).registerEventHandlers();
         }
     }
@@ -264,6 +250,10 @@ let Start = class Start extends base_command_1.BaseCommand {
             process.env.WEBHOOK_URL = `${webhookTunnel.url}/`;
             this.log(`Tunnel URL: ${process.env.WEBHOOK_URL}\n`);
             this.log('IMPORTANT! Do not share with anybody as it would give people access to your n8n instance!');
+        }
+        if (this.globalConfig.database.isLegacySqlite) {
+            const { LegacySqliteExecutionRecoveryService } = await Promise.resolve().then(() => __importStar(require('../executions/legacy-sqlite-execution-recovery.service')));
+            await di_1.Container.get(LegacySqliteExecutionRecoveryService).cleanupWorkflowExecutions();
         }
         await this.server.start();
         di_1.Container.get(executions_pruning_service_1.ExecutionsPruningService).init();

@@ -130,7 +130,7 @@ let Worker = class Worker extends base_command_1.BaseCommand {
     }
     async setConcurrency() {
         const { flags } = this;
-        const envConcurrency = config_1.default.getEnv('executions.concurrency.productionLimit');
+        const envConcurrency = this.globalConfig.executions.concurrency.productionLimit;
         this.concurrency = envConcurrency !== -1 ? envConcurrency : flags.concurrency;
         if (this.concurrency < 5) {
             this.logger.warn('Concurrency is set to less than 5. THIS CAN LEAD TO AN UNSTABLE ENVIRONMENT. Please consider increasing it to at least 5 to make best use of the worker.');

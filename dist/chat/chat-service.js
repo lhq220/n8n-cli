@@ -204,7 +204,9 @@ let ChatService = class ChatService {
     stringifyRawData(data) {
         const buffer = Array.isArray(data)
             ? Buffer.concat(data.map((chunk) => Buffer.from(chunk)))
-            : Buffer.from(data);
+            : data instanceof ArrayBuffer
+                ? Buffer.from(data)
+                : data;
         return buffer.toString('utf8');
     }
     cleanupSession(session, sessionKey) {
